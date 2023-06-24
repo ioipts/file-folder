@@ -1,14 +1,12 @@
 #include "axisfile.h"
 
+#if defined(_MSC_VER)
+
 bool isFileExists(const char* filename)
 {
-	FILE* f = FOPEN(filename, "rb");
-	if (!f) return false;
-	FCLOSE(f);
-	return true;
+	struct stat sb;
+	return ((stat(filename, &sb) == 0) && ((sb.st_mode & _S_IFMT) == _S_IFREG));
 }
-
-#if defined(_MSC_VER)
 
 bool isFolderExists(const char* dir)
 {
@@ -192,14 +190,16 @@ bool setLastModifiedTime(const char* filename, TIME t)
 
 #else 
 
-bool isFolderExists(const char* path)
+bool isFileExists(const char* filename)
 {
-	DIR* dp;
-	if ((dp = opendir(path)) == NULL) {
-		return false;
-	}
-	closedir(dp);
-	return true;
+	struct stat sb;
+	return ((stat(filename, &sb) == 0) && (S_ISREG(sb.st_mode))); // (sb.st_mode & _S_IFMT) == _S_IFREG));
+}
+
+bool isFolderExists(const char* dir)
+{
+	struct stat sb;
+	return ((stat(dir, &sb) == 0) && (S_ISDIR(sb.st_mode))); //((sb.st_mode & _S_IFMT) == _S_IFDIR));
 }
 
 std::vector<std::string> listFolders(const char* path)
